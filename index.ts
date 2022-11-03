@@ -173,7 +173,20 @@ class MigrateProjectData {
         let skipped = 0
         const endpoint = `/api/projects/{project_id}/${key}/` as keyof paths
         const sourceapi = source.path(endpoint) as any
-        let allObjects = await this.paginate(sourceapi.method('get').create())
+        let allObjects
+
+        try {
+            allObjects = await this.paginate(sourceapi.method('get').create())
+         } catch (e) {
+            if (e.getActualType && e.getActualType()) {
+                console.error(`[${key}]`, e.getActualType())
+                if(e.getActualType().data.code === 'payment_required') {
+                    return
+                }
+            }
+            console.error(`[${key}]`)
+            throw e
+        }
 
         if (filterObjects) {
             allObjects = allObjects.filter(filterObjects)
