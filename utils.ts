@@ -38,7 +38,7 @@ export class State {
     public async loadState(): Promise<void> {
         this.state = {}
         if (fs.existsSync(this.fileName)) {
-            const state = await fs.promises.readFile('state.json', 'utf8');
+            const state = await fs.promises.readFile(this.fileName, 'utf8');
             this.state = JSON.parse(state)
         }
     }

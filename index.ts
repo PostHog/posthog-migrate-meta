@@ -89,6 +89,10 @@ class MigrateProjectData {
             null,
             (object) => {
                 replaceCohortsRecurse(object.steps, this.state['cohorts'])
+                object.steps = object.steps.map(step => { 
+                    delete step.id
+                    return step
+                })
                 return object
             }
         )

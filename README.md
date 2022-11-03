@@ -15,12 +15,15 @@ Options
 - `--destinationkey` Person API key, created on the destination instance. See [these intructions](https://posthog.com/docs/api#how-to-obtain-a-personal-api-key) on how to generate the personal api key
 - `--projects` A list of project ids to move over. Will default to moving _all_ projects. Example: `--projects 1 2`
 
-
-## How to use
+## How to use
 
 1. Set up an organization on the new PostHog instance
 1. Move events over using the [Migrator 3000 app](https://posthog.com/docs/apps/migrator-3000)
 1. Use this script as outlined above.
+
+## Using this tool to copy across the same instance or organisation
+
+You can also use this tool to copy settings across the same instance and organisation. Just use the same settings for both source and destination. The new project will have `(copy)` added to the name.
 
 ## How it works
 
