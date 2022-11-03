@@ -9,6 +9,7 @@ import { paths } from './posthogapi'
 import { replaceCohortsRecurse, State } from './utils';
 import * as commandLineArgs from 'command-line-args'
 
+
 const options = commandLineArgs([
     { name: 'destination', type: String },
     { name: 'destinationkey', type: String },
@@ -246,7 +247,7 @@ class MigrateProjectData {
 }
 
 async function run() {
-    const state = new State()
+    const state = new State(options)
     state.loadState()
     if (!state.state.projects) {
         state.state.projects = {}
@@ -261,6 +262,10 @@ async function run() {
 
         if (!state.state.projects[project.id]) {
             let newproject
+            if(options.source === options.destination) {
+                project.name = project.name + ' (copy)'
+            }
+
             try {
                 newproject = await destination.path('/api/projects/').method('post').create()(project)
             } catch (e) {
@@ -276,19 +281,10 @@ async function run() {
             await state.save()
         }
 
-        if (project.id == 2) {
-            const migrate = new MigrateProjectData(project.id, state.state.projects[project.id].destinationId, state)
-            await migrate.run()
-        }
+        const migrate = new MigrateProjectData(project.id, state.state.projects[project.id].destinationId, state)
+        await migrate.run()
     }
 
 }
 
 run()
-
-
-
-
-// const source = new API('https://app.posthog.com', '')
-
-// console.log(source.get('/api/projects/'))

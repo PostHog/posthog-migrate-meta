@@ -13,7 +13,8 @@ Options
 - `--sourcekey` Person API key, created on the source instance. See [these intructions](https://posthog.com/docs/api#how-to-obtain-a-personal-api-key) on how to generate the personal api key
 - `--destination` URL of the PostHog instance you want to move to, without a trailling `/`. Example: `https://posthog.example.com`. Defaults to `https://app.posthog.com`
 - `--destinationkey` Person API key, created on the destination instance. See [these intructions](https://posthog.com/docs/api#how-to-obtain-a-personal-api-key) on how to generate the personal api key
-- `--projects` A comma separated list of project ids to move over. Will default to moving _all_ projects.
+- `--projects` A list of project ids to move over. Will default to moving _all_ projects. Example: `--projects 1 2`
+
 
 ## How to use
 

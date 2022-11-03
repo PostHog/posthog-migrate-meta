@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as crypto from 'crypto'
 
 export const replaceCohortsRecurse = function(object, state) {
         if (Array.isArray(object)) {
@@ -22,17 +23,28 @@ export const replaceCohortsRecurse = function(object, state) {
 
 export class State {
     state: Record<any, any>
+    options: Record<any, any>
+    fileName: string
+
+    constructor(options) {
+        this.options = options
+        this.fileName = this.getFileName()
+    }
+    private getFileName() {
+        const hash = crypto.createHash('sha256').update(this.options.source + this.options.sourcekey + this.options.destination + this.options.destinationkey).digest('hex');
+        return `_state_${hash}.json`
+    }
 
     public async loadState(): Promise<void> {
         this.state = {}
-        if (fs.existsSync('state.json')) {
+        if (fs.existsSync(this.fileName)) {
             const state = await fs.promises.readFile('state.json', 'utf8');
             this.state = JSON.parse(state)
         }
     }
 
     public async save(): Promise<void> {
-        await fs.promises.writeFile('state.json', JSON.stringify(this.state));
+        await fs.promises.writeFile(this.fileName, JSON.stringify(this.state));
     }
 }
  
