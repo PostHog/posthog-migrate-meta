@@ -18,7 +18,7 @@ Options
 ## How to use
 
 1. Set up an organization on the new PostHog instance
-1. Move events over using the [Migrator 3000 app](https://posthog.com/docs/apps/migrator-3000)
+1. Move events over using the [Replicator app's](https://posthog.com/docs/apps/replicator) export historical events job. 
 1. Use this script as outlined above.
 
 ## Using this tool to copy across the same instance or organisation
