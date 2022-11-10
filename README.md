@@ -14,6 +14,7 @@ Options
 - `--destination` URL of the PostHog instance you want to move to, without a trailling `/`. Example: `https://posthog.example.com`. Defaults to `https://app.posthog.com`
 - `--destinationkey` Person API key, created on the destination instance. See [these intructions](https://posthog.com/docs/api#how-to-obtain-a-personal-api-key) on how to generate the personal api key
 - `--projects` A list of project ids to move over. Will default to moving _all_ projects. Example: `--projects 1 2`
+- `--projectmap` If you've already created a project on the new instance and you want to move existing projects there, you can map them. Example: `--projectmap 81250:1`
 
 ## How to use
 
