@@ -15,7 +15,8 @@ const options = commandLineArgs([
     { name: 'destinationkey', type: String },
     { name: 'source', type: String },
     { name: 'sourcekey', type: String },
-    { name: 'projects', type: Number, multiple: true, defaultOption: true},
+    { name: 'projects', type: Number, multiple: true },
+    { name: 'projectmap', type: String, multiple: true },
 ])
 if(!options.destination) {
     options.destination = 'https://app.posthog.com'
@@ -30,6 +31,12 @@ if(!options.destinationkey) {
 if(!options.sourcekey) {
     console.error("--sourcekey is required")
     process.exit()
+}
+if(options.projectmap) {
+    options.projectmap = Object.fromEntries(options.projectmap.map(map => {
+        map = map.split(':')
+        return [map[0], map[1]]
+    }))
 }
 
 
@@ -176,7 +183,7 @@ class MigrateProjectData {
         let allObjects
 
         try {
-            allObjects = await this.paginate(sourceapi.method('get').create())
+            allObjects = await this.paginate(sourceapi.method('get').create(), key)
          } catch (e) {
             if (e.getActualType && e.getActualType()) {
                 console.error(`[${key}]`, e.getActualType())
@@ -235,14 +242,13 @@ class MigrateProjectData {
 
     }
 
-    private async paginate(api: any): Promise<Record<any, any>[]> {
+    private async paginate(api: any, key: key): Promise<Record<any, any>[]> {
         const response = await api(
             {
                 project_id: this.sourceId,
                 limit: 100,
                 basic: true,
-                order: '-last_modified_at',
-                saved: true
+                ...(key === 'insights' ? {order: '-last_modified_at', saved: true} : {})
             }
         )
         if (response.data.next) {
@@ -283,17 +289,23 @@ async function run() {
                 project.name = project.name + ' (copy)'
             }
 
-            try {
-                newproject = await destination.path('/api/projects/').method('post').create()(project)
-            } catch (e) {
-                if (e.getActualType && e.getActualType()) {
-                    console.error(e.getActualType())
+            let newProjectId
+            if(options.projectmap[project.id]) {
+                newProjectId = options.projectmap[project.id]
+            } else {
+                try {
+                    newproject = await destination.path('/api/projects/').method('post').create()(project)
+                    newProjectId = newproject.data.id
+                } catch (e) {
+                    if (e.getActualType && e.getActualType()) {
+                        console.error(e.getActualType())
+                    }
+                    throw e
                 }
-                throw e
             }
             state.state.projects[project.id] = {
                 sourceId: project.id,
-                destinationId: newproject.data.id
+                destinationId: newProjectId
             }
             await state.save()
         }
