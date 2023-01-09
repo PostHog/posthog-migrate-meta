@@ -5,7 +5,7 @@ This tool helps move your metadata (ie everything but events) from one PostHog i
 Usage
 ```bash
 yarn
-ts-node --source [posthog instance you want to migrate from] --sourcekey [personal api key for that instance] --destination [posthog instance you want to migrate to.] --destinationkey [personal api key for destination instance]
+ts-node index.ts --source [posthog instance you want to migrate from] --sourcekey [personal api key for that instance] --destination [posthog instance you want to migrate to.] --destinationkey [personal api key for destination instance]
 ```
 
 Options
