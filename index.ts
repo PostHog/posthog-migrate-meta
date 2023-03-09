@@ -37,6 +37,8 @@ if(options.projectmap) {
         map = map.split(':')
         return [map[0], map[1]]
     }))
+} else {
+    options.projectmap = {}   
 }
 
 
