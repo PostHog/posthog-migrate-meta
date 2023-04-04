@@ -21,9 +21,11 @@ const options = commandLineArgs([
 if(!options.destination) {
     options.destination = 'https://app.posthog.com'
 }
+options.destination = options.destination.replace(/\/$/, '')
 if(!options.source) {
     options.source = 'https://app.posthog.com'
 }
+options.source = options.source.replace(/\/$/, '')
 if(!options.destinationkey) {
     console.error("--destinationkey is required")
     process.exit()
@@ -302,12 +304,19 @@ async function run() {
                     if (e.getActualType && e.getActualType()) {
                         console.error(e.getActualType())
                     }
+                    
                     throw e
+                }
+                if(!newProjectId) {
+                    console.error("Could not create project from id " + project.id)
+                    console.error("Output:")
+                    console.error(newproject)
+                    return
                 }
             }
             state.state.projects[project.id] = {
                 sourceId: project.id,
-                destinationId: newProjectId
+                destinationId: newProjectId.data
             }
             await state.save()
         }
