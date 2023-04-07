@@ -316,7 +316,7 @@ async function run() {
             }
             state.state.projects[project.id] = {
                 sourceId: project.id,
-                destinationId: newProjectId.data
+                destinationId: newProjectId
             }
             await state.save()
         }
