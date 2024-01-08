@@ -40,7 +40,7 @@ It'll migrate the following objects
 
 Note! It won't move over the following
 - Project API Key. You'll need to replace the API key in your code with the new API key.
-- Events/Persons. You'll need to use the [Migrator 3000 app](https://posthog.com/docs/apps/migrator-3000) to move events over. Do this first.
+- Events/Persons. You'll need to use the [Events migration tool](https://github.com/PostHog/posthog-migration-tools) afterwards.
 - "created by" information. Every object will appear as if it was created by you.
 - "created at" information. Every object will appear as if it was created on the time you ran this script.
 
