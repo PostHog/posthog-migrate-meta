@@ -298,13 +298,15 @@ async function run() {
                 newProjectId = options.projectmap[project.id]
             } else {
                 try {
-                    newproject = await destination.path('/api/projects/').method('post').create()(project)
+                    // Remove deprecated fields before creating project
+                    const { access_control, ...projectData } = project
+                    newproject = await destination.path('/api/projects/').method('post').create()(projectData)
                     newProjectId = newproject.data.id
                 } catch (e) {
                     if (e.getActualType && e.getActualType()) {
                         console.error(e.getActualType())
                     }
-                    
+
                     throw e
                 }
                 if(!newProjectId) {
