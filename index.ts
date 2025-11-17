@@ -298,7 +298,8 @@ async function run() {
                 newProjectId = options.projectmap[project.id]
             } else {
                 try {
-                    newproject = await destination.path('/api/projects/').method('post').create()(project)
+                    const { access_control, ...projectWithoutAccessControl } = project
+                    newproject = await destination.path('/api/projects/').method('post').create()(projectWithoutAccessControl)
                     newProjectId = newproject.data.id
                 } catch (e) {
                     if (e.getActualType && e.getActualType()) {
