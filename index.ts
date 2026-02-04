@@ -89,7 +89,7 @@ class MigrateProjectData {
             'cohorts',
             (object) => {
                 if (object.is_static) {
-                    console.warn(`Cohort with ID ${object.id} skipped, as it's a static cohort. Please move this one manually.`)
+                    console.warn(`Cohort with ID ${object.id} skipped, as it's a static cohort. Please move this one manually after event migration.`)
                     return false
                 }
                 return true
