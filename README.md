@@ -1,6 +1,9 @@
 # PostHog migrate metadata
 
-This tool helps move your metadata (ie everything but events) from one PostHog instance to another, for example from your self hosted PostHog instance to PostHog cloud.
+This tool helps move your metadata (ie everything but events) from one PostHog instance to another, for example from your self hosted PostHog instance to PostHog cloud. 
+
+Updated 2/9/2026 
+** Amplitude ** - Migrate from Amplitude to PostHog 
 
 Usage
 ```bash
