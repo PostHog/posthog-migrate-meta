@@ -31,7 +31,11 @@ export class State {
         this.fileName = this.getFileName()
     }
     private getFileName() {
-        const hash = crypto.createHash('sha256').update(this.options.source + this.options.sourcekey + this.options.destination + this.options.destinationkey).digest('hex');
+        // For Mixpanel migrations, source/sourcekey won't exist — use mixpanel options instead
+        const parts = this.options['source-type'] === 'mixpanel'
+            ? (this.options['mixpanel-username'] || '') + (this.options['mixpanel-project-id'] || '') + (this.options.destination || '') + (this.options.destinationkey || '')
+            : (this.options.source || '') + (this.options.sourcekey || '') + (this.options.destination || '') + (this.options.destinationkey || '')
+        const hash = crypto.createHash('sha256').update(parts).digest('hex');
         return `_state_${hash}.json`
     }
 
@@ -47,4 +51,3 @@ export class State {
         await fs.promises.writeFile(this.fileName, JSON.stringify(this.state));
     }
 }
- 
