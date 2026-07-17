@@ -4,7 +4,9 @@
   "main": "index.ts",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^18.11.9"
+    "@types/node": "^18.11.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@types/node-fetch": "2",
