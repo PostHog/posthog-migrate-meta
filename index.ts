@@ -6,7 +6,7 @@ import './fetch-polyfill'
 import { Fetcher, Middleware } from 'openapi-typescript-fetch'
 
 import { paths } from './posthogapi'
-import { replaceCohortsRecurse, State } from './utils';
+import { replaceCohortsRecurse, replaceFlagDependenciesRecurse, State } from './utils';
 import * as commandLineArgs from 'command-line-args'
 
 
@@ -127,6 +127,12 @@ class MigrateProjectData {
             },
             (object) => {
                 replaceCohortsRecurse(object.filters, this.state['cohorts'])
+                try {
+                    replaceFlagDependenciesRecurse(object.filters, this.state['feature_flags'])
+                } catch (e) {
+                    console.warn(`Feature flag "${object.key}" (ID ${object.id}) skipped: ${e.message}. Re-run once the flag it depends on has been migrated.`)
+                    return null
+                }
                 return object
             }
         )
