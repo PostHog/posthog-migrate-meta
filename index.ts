@@ -111,9 +111,11 @@ class MigrateProjectData {
             'experiments',
             null,
             (object) => {
-                replaceCohortsRecurse(object.filters, this.state['cohorts'])
-                for (let i = 0; i < object.filters.actions?.length; i++) {
-                    object.filters.actions[i].id = this.state['actions'][object.filters.actions[i].id]
+                if (object.filters) {
+                    replaceCohortsRecurse(object.filters, this.state['cohorts'])
+                    for (let i = 0; i < object.filters.actions?.length; i++) {
+                        object.filters.actions[i].id = this.state['actions'][object.filters.actions[i].id]
+                    }
                 }
                 return object
             }
