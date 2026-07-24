@@ -93,6 +93,13 @@ class MigrateProjectData {
                     return false
                 }
                 return true
+            },
+            (object) => {
+                // The destination recomputes cohort_type from the filters on create and
+                // rejects a stale value ("Invalid cohort type for the given filters"),
+                // so let it derive the type itself.
+                delete object.cohort_type
+                return object
             }
         )
         await this.migrateObject(
