@@ -21,6 +21,30 @@ export const replaceCohortsRecurse = function(object, state) {
         }
     }
 
+// Flag-dependency properties ({type: 'flag'}) reference other flags by numeric ID
+// in their `key` field, so the IDs must be rewritten to the destination's.
+export const replaceFlagDependenciesRecurse = function(object, state) {
+        if (Array.isArray(object)) {
+            for (let i = 0; i < object.length; i++) {
+                replaceFlagDependenciesRecurse(object[i], state);
+            }
+        }
+        else if (typeof object === "object" && object) {
+            if(object['type'] && object.type === 'flag' && object['key']) {
+                if(!state[object['key']]) {
+                    throw Error(`depends on flag ${object.key}, which has no destination mapping yet`)
+                }
+                // The flags evaluation service parses this key strictly as a string;
+                // a numeric value breaks config parsing for the entire project.
+                object.key = String(state[object['key']])
+            } else {
+                for (const key in object) {
+                    replaceFlagDependenciesRecurse(object[key], state);
+                }
+            }
+        }
+    }
+
 export class State {
     state: Record<any, any>
     options: Record<any, any>
