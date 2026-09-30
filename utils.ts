@@ -21,6 +21,26 @@ export const replaceCohortsRecurse = function(object, state) {
         }
     }
 
+export const replaceActionsRecurse = function(object, state) {
+        if (Array.isArray(object)) {
+            for (let i = 0; i < object.length; i++) {
+                replaceActionsRecurse(object[i], state);
+            }
+        }
+        else if (typeof object === "object" && object) {
+            // Legacy filters use `type: 'actions'`, queries use `kind: 'ActionsNode'`
+            if ((object.kind === 'ActionsNode' || object.type === 'actions') && object.id !== undefined) {
+                if(!state[object.id]) {
+                    throw Error(`Not moving object that contains action ${object.id}.`)
+                }
+                object.id = state[object.id]
+            }
+            for (const key in object) {
+                replaceActionsRecurse(object[key], state);
+            }
+        }
+    }
+
 export class State {
     state: Record<any, any>
     options: Record<any, any>
