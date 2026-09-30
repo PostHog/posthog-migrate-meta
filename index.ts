@@ -6,7 +6,7 @@ import './fetch-polyfill'
 import { Fetcher, Middleware } from 'openapi-typescript-fetch'
 
 import { paths } from './posthogapi'
-import { replaceCohortsRecurse, State } from './utils';
+import { replaceActionsRecurse, replaceCohortsRecurse, State } from './utils';
 import * as commandLineArgs from 'command-line-args'
 
 
@@ -69,6 +69,9 @@ destination.configure({
     init: destinationHeaders,
 })
 
+// PostHog creates this cohort in every new project, without a creator
+const INTERNAL_TEST_USERS_COHORT_NAME = 'Internal / Test users'
+
 type key = 'feature_flags' | 'cohorts' | 'actions' | 'dashboards' | 'insights' | 'experiments' | 'annotations'
 
 class MigrateProjectData {
@@ -85,6 +88,7 @@ class MigrateProjectData {
     }
 
     public async run() {
+        await this.mapInternalTestUsersCohort()
         await this.migrateObject(
             'cohorts',
             (object) => {
@@ -146,18 +150,18 @@ class MigrateProjectData {
             (object) => {
                 try {
                     replaceCohortsRecurse(object.filters, this.state['cohorts'])
+                    replaceCohortsRecurse(object.query, this.state['cohorts'])
+                    replaceActionsRecurse(object.filters, this.state['actions'])
+                    replaceActionsRecurse(object.query, this.state['actions'])
                 } catch (e) {
+                    console.warn(`Insight with ID ${object.id} skipped. ${e.message}`)
                     return null
-                }
-                // Replace action ids
-                for (let i = 0; i < object.filters.actions?.length; i++) {
-                    object.filters.actions[i].id = this.state['actions'][object.filters.actions[i].id]
                 }
                 // Replace dashboard ideas
                 if (object.dashboard) {
                     object.dashboards = [this.state['dashboards'][object.dashboard]]
                 } else {
-                    object.dashboards = object.dashboards.map(dashboardId => {
+                    object.dashboards = (object.dashboards || []).map(dashboardId => {
                         return this.state['dashboards'][dashboardId]
                     }).filter(x => x)
                 }
@@ -176,6 +180,38 @@ class MigrateProjectData {
         )
 
     }
+    // Map the source "Internal / Test users" cohort to the one PostHog already created in the destination, so we don't create a duplicate
+    private async mapInternalTestUsersCohort() {
+        if (!this.state['cohorts']) {
+            this.state['cohorts'] = {}
+        }
+        const isInternalTestUsers = (cohort) => cohort.name === INTERNAL_TEST_USERS_COHORT_NAME && !cohort.created_by && !cohort.deleted
+        const endpoint = '/api/projects/{project_id}/cohorts/' as keyof paths
+
+        const sourceCohort = (await this.paginate((source.path(endpoint) as any).method('get').create(), 'cohorts'))
+            .find(isInternalTestUsers)
+        if (!sourceCohort || this.state['cohorts'][sourceCohort.id]) {
+            return
+        }
+        const destinationCohort = (await this.paginate((destination.path(endpoint) as any).method('get').create(), 'cohorts', this.destinationId, destinationHeaders))
+            .find(isInternalTestUsers)
+        if (!destinationCohort) {
+            return
+        }
+
+        if (sourceCohort.filters) {
+            try {
+                const destinationapi = destination.path('/api/projects/{project_id}/cohorts/{id}/' as keyof paths) as any
+                await destinationapi.method('patch').create()({ project_id: this.destinationId, id: destinationCohort.id, filters: sourceCohort.filters })
+            } catch (e) {
+                console.warn(`Could not copy the filters of cohort ${sourceCohort.id} to cohort ${destinationCohort.id}. Please copy them manually.`, e.getActualType ? e.getActualType() : e)
+            }
+        }
+        this.state['cohorts'][sourceCohort.id] = destinationCohort.id
+        console.log(`[cohorts] Mapped "${INTERNAL_TEST_USERS_COHORT_NAME}" cohort ${sourceCohort.id} to existing cohort ${destinationCohort.id}`)
+        await this._state.save()
+    }
+
     private async migrateObject(key: key, filterObjects?: (object) => boolean, mapObjects?: (object) => any) {
         if (!this.state[key]) {
             this.state[key] = {}
@@ -248,27 +284,27 @@ class MigrateProjectData {
 
     }
 
-    private async paginate(api: any, key: key): Promise<Record<any, any>[]> {
+    private async paginate(api: any, key: key, projectId: string = this.sourceId, headers = sourceHeaders): Promise<Record<any, any>[]> {
         const response = await api(
             {
-                project_id: this.sourceId,
+                project_id: projectId,
                 limit: 100,
                 basic: true,
                 ...(key === 'insights' ? {order: '-last_modified_at', saved: true} : {})
             }
         )
         if (response.data.next) {
-            return await this.recursePaginate(response.data.next, response.data.results)
+            return await this.recursePaginate(response.data.next, headers, response.data.results)
         } else {
             return response.data.results
         }
     }
-    private async recursePaginate(url, data: Record<any, any>[] = [], maxCalls: number = 1000, currentIteration: number = 0): Promise<any> {
+    private async recursePaginate(url, headers, data: Record<any, any>[] = [], maxCalls: number = 1000, currentIteration: number = 0): Promise<any> {
         console.log(url)
-        const grab = await fetch(url, sourceHeaders)
+        const grab = await fetch(url, headers)
         const response = await grab.json()
         if (response.next && maxCalls > currentIteration) {
-            return this.recursePaginate(response.next, [...data, ...response.results], currentIteration + 1)
+            return this.recursePaginate(response.next, headers, [...data, ...response.results], maxCalls, currentIteration + 1)
         } else {
             return [...data, ...response.results]
         }
